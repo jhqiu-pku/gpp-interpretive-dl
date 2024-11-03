@@ -70,7 +70,6 @@ def _setup_model_run(cfg: Dict, run_dir: str) -> Dict:
     if not cfg["run_dir"].is_dir():
         cfg['weight_dir'] = cfg["run_dir"] / 'model_weights'
         cfg["weight_dir"].mkdir(parents=True)
-
     else:
         raise RuntimeError(f"There is already a folder at {cfg['run_dir']}")
     return cfg
@@ -92,7 +91,7 @@ def _prepare_model_data(cfg: Dict) -> Dict:
     # csv file containing the static attributes
     cfg["sta_path"] = 'data/static_final.csv'
     cfg["train_file"] = Path(f'data/Train_Weekly_Stratified/{cfg["fold"]}_train.h5')
-    cfg["test_file"] = Path(f'data/Test_Weekly_Stratified/{cfg["fold"]}_test.h5')
+    cfg["val_file"] = Path(f'data/Test_Weekly_Stratified/{cfg["fold"]}_test.h5')
 
     # dump a copy of cfg to run directory
     with (cfg["run_dir"] / 'cfg.json').open('w') as fp:
@@ -205,7 +204,7 @@ def model_train(cfg):
     train_ds = FluxH5(h5_file=cfg['train_file'],
                       sta_path=cfg["sta_path"])
 
-    val_ds = FluxH5(h5_file=cfg['test_file'],
+    val_ds = FluxH5(h5_file=cfg['val_file'],
                     sta_path=cfg["sta_path"])
 
     train_loader = DataLoader(train_ds,
