@@ -91,7 +91,7 @@ def _prepare_model_data(cfg: Dict) -> Dict:
     # csv file containing the static attributes
     cfg["sta_path"] = 'data/static_final.csv'
     cfg["train_file"] = Path(f'data/Train_Weekly_Stratified/{cfg["fold"]}_train.h5')
-    cfg["val_file"] = Path(f'data/Test_Weekly_Stratified/{cfg["fold"]}_test.h5')
+    cfg["val_file"] = Path(f'data/Val_Weekly_Stratified/{cfg["fold"]}_val.h5')
 
     # dump a copy of cfg to run directory
     with (cfg["run_dir"] / 'cfg.json').open('w') as fp:
