@@ -18,11 +18,11 @@ The repository is structured as follows:
 ```
 
 ###  System requirements
-operating systems: windows 11
-software version: Python 3.11.5
+- operating systems: windows 11
+- software version: Python 3.11.5
 
 ###  Installation guide
-Install dependencies
+Install dependencies:
 `pip install -r requirements.txt`
 
 ### Instructions to run on data
