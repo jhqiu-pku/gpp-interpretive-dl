@@ -1,3 +1,21 @@
+"""
+EA-LSTM training & interpretation
+---------------------------------------
+This script supports two main modes:
+• model_train: Train the EA-LSTM model on meteorological and static data, and evaluate each epoch.
+• model_interpret_global: Compute global feature attributions with Integrated Gradients.
+
+Expected Output
+---------------
+• For model_train:
+  - Checkpoints of model weights in runs/<dir_name>/model_weights/
+  - A cfg.json file in runs/<dir_name>/ containing the run configuration
+  - Console logs with per-epoch loss, NSE, and RMSE
+
+• For model_interpret_global:
+  - Temporal contributions of meteorological variables
+"""
+
 import argparse
 import json
 import pickle
@@ -14,13 +32,17 @@ from corecode.dataset import FluxH5, GlobalH5
 from corecode.datautils import rescale_features, calc_nse, calc_rmse
 from corecode.ealstm import EALSTM
 
-# check if GPU is available
+# --------------------------------------------------------------------------------------
+# Device selection
+# --------------------------------------------------------------------------------------
+# Prefer CUDA if available; otherwise fall back to CPU.
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+# Global settings for training (merged into argparse config)
 GLOBAL_SETTINGS = {
-    'clip_norm': True,
-    'clip_value': 1,
-    'dropout': 0.5,
+    'clip_norm': True,      # enable gradient clipping
+    'clip_value': 1,        # clip threshold
+    'dropout': 0.5,         # dropout rate
     'initial_forget_gate_bias': 0,
     'seq_length': 260,
 }
@@ -35,11 +57,14 @@ def get_args() -> Dict:
         Dictionary containing the run config.
     """
     parser = argparse.ArgumentParser()
+    # "mode" selects the entry point (training or interpretation)
     parser.add_argument('mode', choices=["model_train", "model_interpret_global"])
+    # Training arguments
     parser.add_argument('--data_root', type=str, help="Root directory of data")
     parser.add_argument('--dir_name', type=str, help="For train mode. name for run directory.")
     parser.add_argument('--learning_rate', type=float, default=1e-3, help='Number of learning_rate')
     parser.add_argument('--fold', type=int, help='Number of the folds')
+    # Interpretation arguments
     parser.add_argument('--weight', type=str, help='weight of the model')
     parser.add_argument('--interp_data', type=str, help='data for interpretation')
     parser.add_argument('--epochs',
@@ -63,6 +88,10 @@ def get_args() -> Dict:
 
     return cfg
 
+
+# --------------------------------------------------------------------------------------
+# Helpers for training mode
+# --------------------------------------------------------------------------------------
 
 def _setup_model_run(cfg: Dict, run_dir: str) -> Dict:
     # Create folder structure for this run
@@ -187,6 +216,10 @@ class Model(nn.Module):
         return y
 
 
+# --------------------------------------------------------------------------------------
+# Training / evaluation loops
+# --------------------------------------------------------------------------------------
+
 def model_train(cfg):
     """Train model.
 
@@ -295,8 +328,22 @@ def eval_epoch(model: nn.Module, loader: DataLoader):
     return gpp_nse, gpp_rmse
 
 
-def model_interpret_global(user_cfg: Dict):
+# --------------------------------------------------------------------------------------
+# Global interpretation with Integrated Gradients
+# --------------------------------------------------------------------------------------
 
+def model_interpret_global(user_cfg: Dict):
+    """Run Integrated Gradients to compute temporal contributions of meteorological variables.
+    
+    Input
+    -----
+    user_cfg['weight']: path to the model weight
+    user_cfg['interp_data']: path to interpretation data
+    
+    Output
+    ------
+    Saves results into 'interp.p' pickle file.
+    """
     with open(user_cfg["run_dir"] / 'cfg.json', 'r') as fp:
         run_cfg = json.load(fp)
 
@@ -314,13 +361,15 @@ def model_interpret_global(user_cfg: Dict):
     model.eval()
     ig = attr.IntegratedGradients(model)
     ds = GlobalH5(h5_file=user_cfg['interp_data'])
-
+    
+    # Large batch if memory allows; adjust for your GPU/CPU RAM
     interp_loader = DataLoader(ds,
                                batch_size=2048,
                                shuffle=False,
                                num_workers=0,
                                pin_memory=True)
-
+    
+    # Accumulators for concatenating across batches
     attr_dyn, attr_error = None, None
     attr_row, attr_col, attr_date = None, None, None
 
@@ -365,3 +414,4 @@ def model_interpret_global(user_cfg: Dict):
 if __name__ == "__main__":
     config = get_args()
     globals()[config["mode"]](config)
+
