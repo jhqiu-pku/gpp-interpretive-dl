@@ -1,3 +1,20 @@
+"""
+Dataset utilities for EA-LSTM
+-----------------------------------------
+This module defines two Dataset classes for loading data:
+
+Classes
+-------
+FluxH5  : Loads training/validation data (meteorological and static data + GPP).
+GlobalH5: Loads global data for interpretation (weekly inputs + baseline + static + metadata).
+
+Notes
+-----
+- Both datasets return NumPy arrays converted to torch.Tensor where appropriate.
+- FluxH5 can optionally cache all samples in memory for faster access.
+"""
+
+
 import h5py
 import numpy as np
 import pandas as pd
@@ -7,6 +24,8 @@ from corecode.datautils import load_attributes
 
 
 class FluxH5(Dataset):
+    """Dataset for site-level flux data"""
+    
     def __init__(self,
                  h5_file,
                  sta_path: str,
@@ -37,6 +56,7 @@ class FluxH5(Dataset):
         return self.num_samples
 
     def __getitem__(self, idx: int):
+        """Return training samples"""
         if self.cache:
             x = self.x[idx]
             y_gpp = self.y_gpp[idx]
@@ -66,6 +86,7 @@ class FluxH5(Dataset):
         return x, y_gpp, str_arr
 
     def _load_attributes(self):
+        """Load and normalize static attributes; one-hot encode categorical fields."""
         df = load_attributes(self.sta_path)
         df_igbp = df['IGBP']
         df_igbp = pd.get_dummies(df_igbp)
@@ -80,6 +101,8 @@ class FluxH5(Dataset):
 
 
 class GlobalH5(Dataset):
+    """Dataset for global interpretation"""
+    
     def __init__(self,
                  h5_file):
 
@@ -94,7 +117,7 @@ class GlobalH5(Dataset):
         return self.num_samples
 
     def __getitem__(self, idx: int):
-
+        """Return samples for model attribution"""
         x = self.x[idx]
         x_base = self.x_base[idx]
         x_static = self.x_static[idx]
@@ -119,3 +142,4 @@ class GlobalH5(Dataset):
             x_date = f["pixel_date"][:]
 
         return x, x_base, x_static, x_row, x_col, x_date
+
