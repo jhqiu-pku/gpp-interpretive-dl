@@ -16,6 +16,7 @@ Expected Output
   - Temporal contributions of meteorological variables
 """
 
+
 import argparse
 import json
 import pickle
@@ -414,4 +415,5 @@ def model_interpret_global(user_cfg: Dict):
 if __name__ == "__main__":
     config = get_args()
     globals()[config["mode"]](config)
+
 
