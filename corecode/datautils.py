@@ -1,3 +1,23 @@
+"""
+Utility functions for EA-LSTM
+-----------------------------------------
+This module provides helper functions for data scaling, attribute loading,
+and evaluation metrics.
+
+Functions
+---------
+• rescale_features : Rescale normalized features (e.g., GPP) back to natural units.
+• load_attributes  : Load static attributes.
+• calc_nse         : Compute Nash-Sutcliffe Efficiency between observations and simulations.
+• calc_rmse        : Compute Root Mean Square Error.
+• calc_mae         : Compute Mean Absolute Error.
+
+Notes
+-----
+All metrics expect obs and sim as 1-D arrays of the same length.
+"""
+
+
 import numpy as np
 import pandas as pd
 
@@ -64,6 +84,7 @@ def calc_nse(obs: np.ndarray, sim: np.ndarray) -> float:
 
 
 def calc_rmse(obs: np.ndarray, sim: np.ndarray):
+    """Calculate Root Mean Square Error (RMSE)."""
     obs = obs.flatten()
     sim = sim.flatten()
 
@@ -74,9 +95,11 @@ def calc_rmse(obs: np.ndarray, sim: np.ndarray):
 
 
 def calc_mae(obs: np.ndarray, sim: np.ndarray):
+    """Calculate Mean Absolute Error (MAE)."""
     obs = obs.flatten()
     sim = sim.flatten()
 
     mae_val = np.mean(abs(sim - obs))
 
     return mae_val
+
