@@ -2,7 +2,7 @@
 
 This repository contains the supporting code for the paper:
 
-> Qiu *et al.*, **Large contribution of antecedent climate to ecosystem productivity anomalies** (*Submitted to Journal*)
+> Qiu *et al.* (2025), **Large contribution of antecedent climate to ecosystem productivity anomalies during extreme events**, *Nature Geoscience*, DOI: https://doi.org/10.1038/s41561-025-01856-4
 
 ### Overview
 
